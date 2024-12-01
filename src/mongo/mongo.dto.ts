@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsObject } from 'class-validator';
+
 
 /**
  * DTO para criação de uma configuração.
@@ -49,4 +51,36 @@ export class DeleteConfigurationDto {
     example: 'configuracoes',
   })
   name_collection: string;
+}
+
+export class CreateBankConfigDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  user: string;
+
+  @IsString()
+  password: string;
+
+  @IsString()
+  host: string;
+
+  @IsString()
+  porta: string;
+
+  @IsString()
+  serviceName: string;
+
+  @IsString()
+  sid: string;
+}
+
+export class CreateBankConfigRequestDto {
+  @IsString()
+  configId: string;
+
+  @IsObject()
+  bankData: CreateBankConfigDto;
 }

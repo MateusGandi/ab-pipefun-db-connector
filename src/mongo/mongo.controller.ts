@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MongoService } from './mongo.service';
 import { CreateConfigurationWithMetadataDto, DeleteConfigurationDto } from './mongo.dto';
@@ -30,6 +30,7 @@ export class MongoController {
     @Query('name_db') name_db: string, 
     @Query('name_collection') name_collection: string
   ) {
+    
     const dbName = name_db || process.env.MONGO_DB_APP;
     const collectionName = name_collection || process.env.MONGO_COLLECTION;
     return await this.mongoService.findAllConfigurations(dbName, collectionName);
@@ -64,4 +65,31 @@ export class MongoController {
     }
     return { message: `Document com o nome ${document} deletado com sucesso.` };
   }
+}
+
+@Controller('config')
+export class ConfigController {
+  constructor(private readonly mongoService: MongoService) {}
+
+  @Put('')
+  async createConfig(@Body() data: any) {
+    const dbName = data.name_db || process.env.MONGO_DB_APP;
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
+  
+    const createdOrUpdatedConfig = await this.mongoService.updateConfig(dbName, collectionName, data);
+    return createdOrUpdatedConfig;
+  }
+
+  @Delete('')
+  async deleteConfig(
+    @Query('name_db') name_db: string, 
+    @Query('name_collection') name_collection: string, 
+    @Query('id') id: string, 
+    @Query('objectId') objectId: string
+  ) {
+    const dbName = name_db || process.env.MONGO_DB_APP;
+    const collectionName = name_collection || process.env.MONGO_COLLECTION;    
+    return this.mongoService.deleteConfig(dbName, collectionName, id, objectId);
+  }
+  
 }

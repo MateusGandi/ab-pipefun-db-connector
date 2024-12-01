@@ -11,7 +11,6 @@ import { Logger } from '@nestjs/common';
         const logger = new Logger('DatabaseModule');
 
         const uri = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE}`;
-        const connection = await mongoose.createConnection(uri);
         
         const dbName = process.env.MONGO_DB_APP;
         const collectionName = process.env.MONGO_COLLECTION;
@@ -20,9 +19,10 @@ import { Logger } from '@nestjs/common';
           const connection = await mongoose.createConnection(uri);
           logger.log('Conexão com MongoDB estabelecida na base admin');
 
-          // Verifica e cria o database e a collection
           const db = connection.useDb(dbName);
-          const collections = await db.collection(collectionName)
+          
+          const collections = await db.listCollections();
+
           const collectionExists = !!collections.find(c => c.name === collectionName);
 
           if (!collectionExists) {
