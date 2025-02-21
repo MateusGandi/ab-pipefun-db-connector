@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 import * as os from 'os';
 import { Logger } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 
 const loggerApp = new Logger('App');
 
@@ -33,6 +34,10 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   
   const app = await NestFactory.create(AppModule);
+  
+  // Aumentando o limite de tamanho da requisição
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   const config = new DocumentBuilder()
     .setTitle('API MongoDB Connector')
@@ -46,8 +51,8 @@ async function bootstrap() {
 
   const host = process.env.APP_HOST || getLocalIP();
   const port = process.env.APP_PORT || 3000;
-  logger.log(`App running on http://localhost:${port}`);
-  logger.log(`Swagger docs available at http://localhost:${port}/api`);
+  logger.log(`App running on http://${host}:${port}`);
+  logger.log(`Swagger docs available at http://${host}:${port}/api`);
 
   await app.listen(port);
 }
