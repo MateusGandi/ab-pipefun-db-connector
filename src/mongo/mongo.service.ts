@@ -160,7 +160,7 @@ export class MongoService {
     );
   
     if (!existingDocument || !existingDocument.parametros) {
-      throw new NotFoundException(`Nenhum item encontrado em 'parametros' onde '${objectProp}' contém '${filter}'.`);
+      return []
     }
   
     return existingDocument.parametros;
