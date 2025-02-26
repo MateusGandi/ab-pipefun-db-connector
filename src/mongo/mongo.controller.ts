@@ -82,11 +82,11 @@ export class ConfigController {
     return createdOrUpdatedConfig;
   }
 
-  @Put('/update-item/:documentName')
+  @Put('/update-item/:documentName/:objectId')
   async updateInConfig(
     @Body() data: any, 
     @Param('documentName') documentName: string,
-    @Query('objectId') objectId: string,
+    @Param('objectId') objectId: string,
   ) {
     const dbName = data.name_db || process.env.MONGO_DB_APP;
     const collectionName = data.name_collection || process.env.MONGO_COLLECTION; 

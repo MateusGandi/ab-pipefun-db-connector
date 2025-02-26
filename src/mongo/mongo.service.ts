@@ -1,7 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { Connection } from 'mongoose';
 import { ObjectId } from 'mongodb';
+import { NotFoundError } from 'rxjs';
 
 interface DocumentType  {
   _id: ObjectId;
@@ -109,9 +110,14 @@ export class MongoService {
   ): Promise<any> {
     const collection = this.getCollection(name_db, name_collection); 
     const itemObjectId = new ObjectId(itemId);
-   
+    const existingDocument = await collection.findOne({ name: documentName });
+ 
+    if(!existingDocument){
+      throw new NotFoundException("Documento não encontrado!")
+    }
+
     const updateResult = await collection.updateOne(
-      { name: documentName, ["parametros._id"]: itemObjectId },
+      { _id: existingDocument._id, ["parametros._id"]: itemObjectId },
       {
         $set: {
           ["parametros.$"]: { ...updatedItem, _id: itemObjectId },
