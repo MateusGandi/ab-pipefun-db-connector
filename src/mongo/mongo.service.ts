@@ -3,6 +3,10 @@ import { BadRequestException } from '@nestjs/common';
 import { Connection } from 'mongoose';
 import { ObjectId } from 'mongodb';
 
+interface DocumentType  {
+  _id: ObjectId;
+  parametros: any[]; // Defina o tipo correto dos parâmetros, se possível.
+};
 @Injectable()
 export class MongoService {
   constructor(@Inject('MONGO_CONNECTION') private readonly mongoConnection: Connection) {}
@@ -100,27 +104,25 @@ export class MongoService {
     name_db: string,
     name_collection: string,
     documentId: string,
-    itemId: string,
-    arrayField: string,
-    updatedItem: { [key: string]: any }
+    itemId: string,  
+    updatedItem:any
   ): Promise<any> {
     const collection = this.getCollection(name_db, name_collection);
     const objectId = new ObjectId(documentId);
     const itemObjectId = new ObjectId(itemId);
-  
-    // Atualizar o item específico no array
+   
     const updateResult = await collection.updateOne(
-      { _id: objectId, [`${arrayField}._id`]: itemObjectId },
+      { _id: objectId, ["parametros._id"]: itemObjectId },
       {
         $set: {
-          [`${arrayField}.$`]: { ...updatedItem, _id: itemObjectId },
+          ["parametros.$"]: { ...updatedItem, _id: itemObjectId },
         },
       }
     );
   
     if (updateResult.matchedCount === 0) {
       throw new BadRequestException(
-        `Documento ou item dentro do array '${arrayField}' não encontrado.`
+        `Documento ou item dentro do array não encontrado.`
       );
     }
   
@@ -130,53 +132,33 @@ export class MongoService {
     };
   }
   
-
   async insertConfig(
     name_db: string,
     name_collection: string,
-    data: { [key: string]: any }
+    data: any,
+    id: string
   ): Promise<any> {
     const collection = this.getCollection(name_db, name_collection);
-   
-    const newDocument = {
-      ...data,
-      _id: new ObjectId(),
-    };
-   
-    Object.keys(newDocument).forEach((key) => {
-      if (Array.isArray(newDocument[key])) {
-        const items = newDocument[key];
+    const documentId = new ObjectId(id);  
   
-        items.forEach((item) => {
-          if (!item.name) {
-            throw new BadRequestException(
-              `O atributo 'name' é obrigatório em cada objeto do array '${key}'`
-            );
-          }
-        });
+    const newItem = { ...data, _id: new ObjectId() };
   
-        const names = items.map((item) => item.name);
-        const uniqueNames = new Set(names);
-        if (names.length !== uniqueNames.size) {
-          throw new BadRequestException(
-            `O atributo 'name' deve ser único dentro do array '${key}'`
-          );
-        }
-  
-        newDocument[key] = items.map((item) => ({
-          ...item,
-          _id: new ObjectId(),
-        }));
-      }
-    });
-   
-    const insertedResult = await collection.insertOne(newDocument);
-  
-    return {
-      message: 'Documento inserido com sucesso',
-      insertedId: insertedResult.insertedId,
-    };
+    const existingDocument = await collection.findOne({ _id: documentId });
+    const toSave:any = { parametros : newItem }
+
+    if (existingDocument) {
+      const updatedDocument = await collection.updateOne(
+        { _id: documentId },
+        {
+          $push: toSave, 
+        } 
+      );
+      return { message: 'Documento atualizado com sucesso', updatedCount: updatedDocument.modifiedCount };
+    } else {
+      return { message: 'Documento não encontrado', _id: documentId };
+    }
   }
+  
 
   async deleteConfig(
     name_db: string,

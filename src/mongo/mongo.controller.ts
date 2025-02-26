@@ -73,37 +73,25 @@ export class ConfigController {
 
   
   @Post('insert')
-  async insertInConfig(@Body() data: any) {
+  async insertInConfig(@Body() data: any, @Query('id') id: string,) {
     const dbName = data.name_db || process.env.MONGO_DB_APP;
-    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
-  
-    const createdOrUpdatedConfig = await this.mongoService.insertConfig(dbName, collectionName, data);
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION; 
+    const createdOrUpdatedConfig = await this.mongoService.insertConfig(dbName, collectionName, data, id);
     return createdOrUpdatedConfig;
   }
 
   @Put('update-item')
-  async updateArrayItemController(@Body() data: any) {
+  async updateInConfig(
+    @Body() data: any, 
+    @Query('id') id: string,
+    @Query('objectId') objectId: string,
+  ) {
     const dbName = data.name_db || process.env.MONGO_DB_APP;
-    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
-    const { documentId, itemId, arrayField, updatedItem } = data;
-  
-    if (!documentId || !itemId || !arrayField || !updatedItem) {
-      throw new BadRequestException('Os parâmetros documentId, itemId, arrayField e updatedItem são obrigatórios.');
-    }
-  
-    const updatedConfig = await this.mongoService.updateArrayItem(
-      dbName,
-      collectionName,
-      documentId,
-      itemId,
-      arrayField,
-      updatedItem
-    );
-  
-    return updatedConfig;
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION; 
+    const createdOrUpdatedConfig = await this.mongoService.updateArrayItem(dbName, collectionName, id, objectId, data);
+    return createdOrUpdatedConfig;
   }
   
-
   
   @Put('insert')
   async updateConfig(@Body() data: any) {
