@@ -96,6 +96,88 @@ export class MongoService {
     }
   }
 
+  async updateArrayItem(
+    name_db: string,
+    name_collection: string,
+    documentId: string,
+    itemId: string,
+    arrayField: string,
+    updatedItem: { [key: string]: any }
+  ): Promise<any> {
+    const collection = this.getCollection(name_db, name_collection);
+    const objectId = new ObjectId(documentId);
+    const itemObjectId = new ObjectId(itemId);
+  
+    // Atualizar o item específico no array
+    const updateResult = await collection.updateOne(
+      { _id: objectId, [`${arrayField}._id`]: itemObjectId },
+      {
+        $set: {
+          [`${arrayField}.$`]: { ...updatedItem, _id: itemObjectId },
+        },
+      }
+    );
+  
+    if (updateResult.matchedCount === 0) {
+      throw new BadRequestException(
+        `Documento ou item dentro do array '${arrayField}' não encontrado.`
+      );
+    }
+  
+    return {
+      message: 'Item atualizado com sucesso',
+      modifiedCount: updateResult.modifiedCount,
+    };
+  }
+  
+
+  async insertConfig(
+    name_db: string,
+    name_collection: string,
+    data: { [key: string]: any }
+  ): Promise<any> {
+    const collection = this.getCollection(name_db, name_collection);
+   
+    const newDocument = {
+      ...data,
+      _id: new ObjectId(),
+    };
+   
+    Object.keys(newDocument).forEach((key) => {
+      if (Array.isArray(newDocument[key])) {
+        const items = newDocument[key];
+  
+        items.forEach((item) => {
+          if (!item.name) {
+            throw new BadRequestException(
+              `O atributo 'name' é obrigatório em cada objeto do array '${key}'`
+            );
+          }
+        });
+  
+        const names = items.map((item) => item.name);
+        const uniqueNames = new Set(names);
+        if (names.length !== uniqueNames.size) {
+          throw new BadRequestException(
+            `O atributo 'name' deve ser único dentro do array '${key}'`
+          );
+        }
+  
+        newDocument[key] = items.map((item) => ({
+          ...item,
+          _id: new ObjectId(),
+        }));
+      }
+    });
+   
+    const insertedResult = await collection.insertOne(newDocument);
+  
+    return {
+      message: 'Documento inserido com sucesso',
+      insertedId: insertedResult.insertedId,
+    };
+  }
+
   async deleteConfig(
     name_db: string,
     name_collection: string,

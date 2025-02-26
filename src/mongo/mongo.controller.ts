@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Logger, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MongoService } from './mongo.service';
 import { CreateConfigurationWithMetadataDto, DeleteConfigurationDto } from './mongo.dto';
@@ -70,6 +70,50 @@ export class MongoController {
 @Controller('config')
 export class ConfigController {
   constructor(private readonly mongoService: MongoService) {}
+
+  
+  @Post('insert')
+  async insertInConfig(@Body() data: any) {
+    const dbName = data.name_db || process.env.MONGO_DB_APP;
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
+  
+    const createdOrUpdatedConfig = await this.mongoService.insertConfig(dbName, collectionName, data);
+    return createdOrUpdatedConfig;
+  }
+
+  @Put('update-item')
+  async updateArrayItemController(@Body() data: any) {
+    const dbName = data.name_db || process.env.MONGO_DB_APP;
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
+    const { documentId, itemId, arrayField, updatedItem } = data;
+  
+    if (!documentId || !itemId || !arrayField || !updatedItem) {
+      throw new BadRequestException('Os parâmetros documentId, itemId, arrayField e updatedItem são obrigatórios.');
+    }
+  
+    const updatedConfig = await this.mongoService.updateArrayItem(
+      dbName,
+      collectionName,
+      documentId,
+      itemId,
+      arrayField,
+      updatedItem
+    );
+  
+    return updatedConfig;
+  }
+  
+
+  
+  @Put('insert')
+  async updateConfig(@Body() data: any) {
+    const dbName = data.name_db || process.env.MONGO_DB_APP;
+    const collectionName = data.name_collection || process.env.MONGO_COLLECTION;
+  
+    const createdOrUpdatedConfig = await this.mongoService.updateConfig(dbName, collectionName, data);
+    return createdOrUpdatedConfig;
+  }
+
 
   @Put('')
   async createConfig(@Body() data: any) {
