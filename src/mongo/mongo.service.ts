@@ -136,6 +136,37 @@ export class MongoService {
       modifiedCount: updateResult.modifiedCount,
     };
   }
+
+  async getArrayItem(
+    name_db: string,
+    name_collection: string,
+    documentName: string,
+    objectProp: string, // Nome do campo dentro dos objetos do array
+    filter: string // Parte do valor a ser buscado
+  ): Promise<any[]> {
+    const collection = this.getCollection(name_db, name_collection);
+ 
+    // Busca no MongoDB diretamente usando `$elemMatch` e `$regex`
+    const existingDocument = await collection.findOne(
+      {
+        name: documentName,
+        parametros: {
+          $elemMatch: {
+            [objectProp]: { $regex: filter, $options: "i" } // Busca parcial, case-insensitive
+          }
+        }
+      },
+      { projection: { "parametros.$": 1 } } // Retorna apenas o item correspondente no array
+    );
+  
+    if (!existingDocument || !existingDocument.parametros) {
+      throw new NotFoundException(`Nenhum item encontrado em 'parametros' onde '${objectProp}' contém '${filter}'.`);
+    }
+  
+    return existingDocument.parametros;
+  }
+  
+  
   
   async insertConfig(
     name_db: string,

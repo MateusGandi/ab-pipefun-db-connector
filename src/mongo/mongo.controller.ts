@@ -93,7 +93,18 @@ export class ConfigController {
     const createdOrUpdatedConfig = await this.mongoService.updateArrayItem(dbName, collectionName, documentName, objectId, data);
     return createdOrUpdatedConfig;
   }
-  
+
+  @Get('/search/:documentName/:objectProp/:filter')
+  async getInConfig( 
+    @Param('documentName') documentName: string,
+    @Param('objectProp') objectProp: string,
+    @Param('filter') filter: string,
+  ) {
+    const dbName = process.env.MONGO_DB_APP;
+    const collectionName =   process.env.MONGO_COLLECTION; 
+    const createdOrUpdatedConfig = await this.mongoService.getArrayItem(dbName, collectionName, documentName, objectProp, filter);
+    return createdOrUpdatedConfig;
+  }
   
   @Put('insert')
   async updateConfig(@Body() data: any) {
