@@ -145,25 +145,22 @@ export class MongoService {
     filter: string // Parte do valor a ser buscado
   ): Promise<any[]> {
     const collection = this.getCollection(name_db, name_collection);
- 
-    // Busca no MongoDB diretamente usando `$elemMatch` e `$regex`
-    const existingDocument = await collection.find(
-      {
-        name: documentName,
-        parametros: {
-          $elemMatch: {
-            [objectProp]: { $regex: filter, $options: "i" } // Busca parcial, case-insensitive
-          }
-        }
+  
+    // Busca no MongoDB diretamente usando `$unwind`, `$match` e `$regex`
+    const pipeline = [
+      { $match: { name: documentName } }, // Filtra pelo nome do documento
+      { $unwind: "$parametros" }, // Desestrutura o array "parametros"
+      { 
+        $match: { 
+          [`parametros.${objectProp}`]: { $regex: filter, $options: "i" } // Busca parcial (case-insensitive)
+        } 
       },
-      { projection: { "parametros.$": 1 } } // Retorna apenas o item correspondente no array
-    );
+      { $replaceRoot: { newRoot: "$parametros" } } // Retorna apenas os itens correspondentes
+    ];
   
-    if (!existingDocument || !existingDocument.parametros) {
-      return []
-    }
+    const foundItems = await collection.aggregate(pipeline).toArray();
   
-    return existingDocument.parametros;
+    return foundItems;
   }
   
   
