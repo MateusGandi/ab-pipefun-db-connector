@@ -103,16 +103,15 @@ export class MongoService {
   async updateArrayItem(
     name_db: string,
     name_collection: string,
-    documentId: string,
+    documentName: string,
     itemId: string,  
     updatedItem:any
   ): Promise<any> {
-    const collection = this.getCollection(name_db, name_collection);
-    const objectId = new ObjectId(documentId);
+    const collection = this.getCollection(name_db, name_collection); 
     const itemObjectId = new ObjectId(itemId);
    
     const updateResult = await collection.updateOne(
-      { _id: objectId, ["parametros._id"]: itemObjectId },
+      { name: documentName, ["parametros._id"]: itemObjectId },
       {
         $set: {
           ["parametros.$"]: { ...updatedItem, _id: itemObjectId },
@@ -136,26 +135,25 @@ export class MongoService {
     name_db: string,
     name_collection: string,
     data: any,
-    id: string
+    documentName: string
   ): Promise<any> {
-    const collection = this.getCollection(name_db, name_collection);
-    const documentId = new ObjectId(id);  
+    const collection = this.getCollection(name_db, name_collection); 
   
     const newItem = { ...data, _id: new ObjectId() };
   
-    const existingDocument = await collection.findOne({ _id: documentId });
+    const existingDocument = await collection.findOne({ name: documentName });
     const toSave:any = { parametros : newItem }
 
     if (existingDocument) {
       const updatedDocument = await collection.updateOne(
-        { _id: documentId },
+        { _id: existingDocument._id },
         {
           $push: toSave, 
         } 
       );
       return { message: 'Documento atualizado com sucesso', updatedCount: updatedDocument.modifiedCount };
     } else {
-      return { message: 'Documento não encontrado', _id: documentId };
+      return { message: 'Documento não encontrado', name: documentName };
     }
   }
   

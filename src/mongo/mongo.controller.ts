@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Logger, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Query, Logger, BadRequestException, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { MongoService } from './mongo.service';
 import { CreateConfigurationWithMetadataDto, DeleteConfigurationDto } from './mongo.dto';
@@ -72,23 +72,25 @@ export class ConfigController {
   constructor(private readonly mongoService: MongoService) {}
 
   
-  @Post('insert')
-  async insertInConfig(@Body() data: any, @Query('id') id: string,) {
+  @Post('/insert/:documentName')
+  async insertInConfig(@Body() data: any, 
+    @Param('documentName') documentName: string,
+  ) {
     const dbName = data.name_db || process.env.MONGO_DB_APP;
     const collectionName = data.name_collection || process.env.MONGO_COLLECTION; 
-    const createdOrUpdatedConfig = await this.mongoService.insertConfig(dbName, collectionName, data, id);
+    const createdOrUpdatedConfig = await this.mongoService.insertConfig(dbName, collectionName, data, documentName);
     return createdOrUpdatedConfig;
   }
 
-  @Put('update-item')
+  @Put('/update-item/:documentName')
   async updateInConfig(
     @Body() data: any, 
-    @Query('id') id: string,
+    @Param('documentName') documentName: string,
     @Query('objectId') objectId: string,
   ) {
     const dbName = data.name_db || process.env.MONGO_DB_APP;
     const collectionName = data.name_collection || process.env.MONGO_COLLECTION; 
-    const createdOrUpdatedConfig = await this.mongoService.updateArrayItem(dbName, collectionName, id, objectId, data);
+    const createdOrUpdatedConfig = await this.mongoService.updateArrayItem(dbName, collectionName, documentName, objectId, data);
     return createdOrUpdatedConfig;
   }
   
