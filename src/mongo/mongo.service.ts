@@ -147,7 +147,7 @@ export class MongoService {
     const collection = this.getCollection(name_db, name_collection);
  
     // Busca no MongoDB diretamente usando `$elemMatch` e `$regex`
-    const existingDocument = await collection.findOne(
+    const existingDocument = await collection.find(
       {
         name: documentName,
         parametros: {
